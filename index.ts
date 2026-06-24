@@ -1,29 +1,39 @@
 import "dotenv/config";
-import { Pool } from "pg";
+import express from "express";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "./generated/prisma/client";
 
-// データベースに接続するためのコネクションプールとアダプターを用意する
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const adapter = new PrismaPg(pool);
+// データベース接続の準備（Part 4 と同じじゃ）
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter, log: ["query"] });
 
-async function main() {
-  console.log("データベースにユーザーを 1 件追加するぞ...");
+const app = express();
+const PORT = process.env.PORT || 8888;
 
-  // ユーザーを 1 件追加して、一覧を取得する
-  await prisma.user.create({
-    data: { name: `新しいユーザー ${new Date().toISOString()}` },
-  });
+// EJS という仕組みを使って画面を作る設定じゃ
+app.set("view engine", "ejs");
+app.set("views", "./views");
+// フォームから送られてきたデータを受け取れるようにする設定じゃ
+app.use(express.urlencoded({ extended: true }));
 
+// ブラウザで 「/」 にアクセスした時の処理
+app.get("/", async (req, res) => {
   const users = await prisma.user.findMany();
-  console.log("現在のユーザー一覧:", users);
-}
+  // views/index.ejs を使って画面を表示するぞ
+  res.render("index", { users });
+});
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  // 接続をきれいに閉じるための処理じゃ
-  .finally(() => Promise.all([prisma.$disconnect(), pool.end()]));
+// ユーザーを追加するボタンが押された時の処理
+app.post("/users", async (req, res) => {
+  const name = req.body.name;
+  if (name) {
+    const newUser = await prisma.user.create({ data: { name } });
+    console.log("データベースに追加したぞ:", newUser);
+  }
+  // 追加が終わったら一覧画面に戻るのじゃ
+  res.redirect("/");
+});
+
+app.listen(PORT, () => {
+  console.log(`サーバーが http://localhost:${PORT} で起動しましたぞ。`);
+});
