@@ -5,7 +5,11 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "./generated/prisma/client";
 
 // データベースの住所を使って「コネクションプール」を作るのじゃ
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+// ここを次のように書き換えるのじゃ
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }, // 「証明書の確認をスキップして SSL 通信する」という設定じゃ
+});
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter, log: ["query"] });
 
