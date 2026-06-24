@@ -1,20 +1,17 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>ユーザー一覧アプリ</title>
-</head>
+<head><meta charset="UTF-8"><title>ユーザー一覧アプリ</title></head>
 <body>
   <h1>ユーザー一覧</h1>
   <ul>
     <% users.forEach(user => { %>
-      <li><%= user.name %> (ID: <%= user.id %>)</li>
+      <li><%= user.name %> (<%= user.age ? user.age + '歳' : '年齢未設定' %>)</li>
     <% }) %>
   </ul>
-
   <h2>ユーザーを追加する</h2>
   <form action="/users" method="post">
-    <input type="text" name="name" placeholder="ユーザー名を入力" required>
+    <input type="text" name="name" placeholder="名前" required>
+    <input type="number" name="age" placeholder="年齢">
     <button type="submit">追加する</button>
   </form>
 </body>

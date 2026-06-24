@@ -1,14 +1,12 @@
 import "dotenv/config";
 import express from "express";
-import { Pool } from "pg"; // pg から Pool を読み込むぞ
+import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "./generated/prisma/client";
 
-// データベースの住所を使って「コネクションプール」を作るのじゃ
-// ここを次のように書き換えるのじゃ
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }, // 「証明書の確認をスキップして SSL 通信する」という設定じゃ
+  ssl: { rejectUnauthorized: false }, // これが遠距離通信の守り神じゃ
 });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter, log: ["query"] });
@@ -25,15 +23,14 @@ app.get("/", async (req, res) => {
     const users = await prisma.user.findMany();
     res.render("index", { users });
   } catch (error) {
-    console.error("エラーが発生したぞ:", error);
-    res
-      .status(500)
-      .send("データベースの読み込みに失敗しましたぞ。ログを確認しておくれ。");
+    console.error("エラー:", error);
+    res.status(500).send("DB読み込み失敗。Logsを確認しておくれ。");
   }
 });
 
 app.post("/users", async (req, res) => {
   const name = req.body.name;
+  // 年齢を受け取って数値に変えるのじゃ
   const age = req.body.age ? Number(req.body.age) : null;
   if (name) {
     await prisma.user.create({ data: { name, age } });
@@ -42,5 +39,5 @@ app.post("/users", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`サーバーが http://localhost:${PORT} で起動しましたぞ。`);
+  console.log(`サーバー起動: http://localhost:${PORT}`);
 });
